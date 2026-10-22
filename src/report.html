@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tracer report</title>
+<style>
+:root {
+	--bg: #ffffff;
+	--subtle: #f6f8fa;
+	--hover: #f6f8fa;
+	--text: #1f2328;
+	--muted: #59636e;
+	--faint: #818b98;
+	--border: #d1d9e0;
+	--border-muted: #e3e8ec;
+	--accent: #8250df;
+	--accent-soft: rgba(130, 80, 223, 0.12);
+	--bar: #8250df;
+	--bar-lit: #6639ba;
+	--bad: #d1242f;
+	--bad-soft: rgba(209, 36, 47, 0.08);
+	--warn: #9a6700;
+	--counter: rgba(129, 139, 152, 0.16);
+	--sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+	--mono: ui-monospace, "JetBrains Mono", SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #1e1f22;
+		--subtle: #2b2d30;
+		--hover: #26282b;
+		--text: #dfe1e5;
+		--muted: #9da0a8;
+		--faint: #6f737a;
+		--border: #393b40;
+		--border-muted: #2f3135;
+		--accent: #ab7df8;
+		--accent-soft: rgba(171, 125, 248, 0.16);
+		--bar: #9470e0;
+		--bar-lit: #c8adfb;
+		--bad: #f75f5f;
+		--bad-soft: rgba(247, 95, 95, 0.1);
+		--warn: #d6a43d;
+		--counter: rgba(157, 160, 168, 0.18);
+		color-scheme: dark;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 14px/1.5 var(--sans);
+}
+
+body {
+	padding: 0 16px 56px;
+}
+
+main {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+code,
+.mono {
+	font-family: var(--mono);
+	font-size: 12.5px;
+}
+
+.head {
+	padding: 24px 0 0;
+}
+
+.title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px;
+	font-size: 20px;
+}
+
+.title .product {
+	color: var(--muted);
+	font-weight: 400;
+}
+
+.title .slash {
+	color: var(--faint);
+}
+
+.title strong {
+	font-weight: 600;
+}
+
+.meta {
+	margin-top: 2px;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.scripts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 14px;
+}
+
+.scripts button {
+	padding: 3px 12px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--subtle);
+	color: var(--text);
+	font: 13px var(--sans);
+	cursor: pointer;
+}
+
+.scripts button.on {
+	border-color: var(--accent);
+	background: var(--accent-soft);
+}
+
+.sections {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 22px;
+	margin-top: 14px;
+	border-bottom: 1px solid var(--border);
+	background: var(--bg);
+}
+
+.sections a {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 0 9px;
+	border-bottom: 2px solid transparent;
+	color: var(--muted);
+}
+
+.sections a:hover {
+	color: var(--text);
+	text-decoration: none;
+	border-bottom-color: var(--border);
+}
+
+.sections a.on {
+	color: var(--text);
+	font-weight: 600;
+	border-bottom-color: var(--accent);
+}
+
+.counter {
+	display: inline-block;
+	min-width: 20px;
+	padding: 0 6px;
+	border-radius: 2em;
+	background: var(--counter);
+	color: var(--text);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 18px;
+	text-align: center;
+}
+
+.counter.bad {
+	background: var(--bad-soft);
+	color: var(--bad);
+}
+
+.box {
+	margin-top: 24px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	overflow: hidden;
+	scroll-margin-top: 56px;
+}
+
+.box-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+	padding: 10px 16px;
+	border-bottom: 1px solid var(--border);
+	background: var(--subtle);
+}
+
+.box-head h2 {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.box-foot {
+	padding: 9px 16px;
+	border-top: 1px solid var(--border-muted);
+	color: var(--muted);
+	font-size: 12.5px;
+}
+
+.notice {
+	margin-top: 24px;
+	padding: 12px 16px;
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--accent);
+	border-radius: 6px;
+	background: var(--subtle);
+	color: var(--muted);
+}
+
+.scroll {
+	overflow-x: auto;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font-variant-numeric: tabular-nums;
+}
+
+th {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--border-muted);
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 600;
+	text-align: right;
+	white-space: nowrap;
+}
+
+th.sortable {
+	cursor: pointer;
+	user-select: none;
+}
+
+th.sortable:hover,
+th.sorted {
+	color: var(--text);
+}
+
+th.sorted::after {
+	content: " \2193";
+	color: var(--accent);
+}
+
+th.sorted.up::after {
+	content: " \2191";
+}
+
+th:first-child,
+td:first-child,
+th.left,
+td.left {
+	text-align: left;
+}
+
+td {
+	padding: 7px 12px;
+	border-bottom: 1px solid var(--border-muted);
+	text-align: right;
+	white-space: nowrap;
+}
+
+tbody tr:last-child > td {
+	border-bottom: 0;
+}
+
+td.name {
+	max-width: 400px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-family: var(--mono);
+	font-size: 12.5px;
+}
+
+td.wrap {
+	white-space: normal;
+	word-break: break-all;
+}
+
+tbody tr.row:hover,
+tbody tr.row.open {
+	background: var(--hover);
+}
+
+tbody tr.expandable {
+	cursor: pointer;
+}
+
+tbody tr.expandable td:first-child::before {
+	content: "\25B8";
+	display: inline-block;
+	width: 16px;
+	color: var(--faint);
+	font-family: var(--sans);
+}
+
+tbody tr.expandable.open td:first-child::before {
+	content: "\25BE";
+	color: var(--accent);
+}
+
+.kv td {
+	text-align: left;
+	white-space: normal;
+}
+
+.kv td:first-child {
+	width: 190px;
+	color: var(--muted);
+}
+
+.kv .value {
+	font-weight: 600;
+}
+
+.kv .detail {
+	margin-left: 10px;
+	color: var(--muted);
+}
+
+.label {
+	display: inline-block;
+	padding: 0 7px;
+	border: 1px solid var(--bad);
+	border-radius: 2em;
+	color: var(--bad);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 18px;
+}
+
+.bad {
+	color: var(--bad);
+}
+
+.warn {
+	color: var(--warn);
+}
+
+.at {
+	color: var(--faint);
+	font-size: 12px;
+}
+
+.share {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.bar {
+	width: 80px;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--border-muted);
+	overflow: hidden;
+}
+
+.bar i {
+	display: block;
+	height: 100%;
+	background: var(--bar);
+}
+
+.spread {
+	display: inline-flex;
+	gap: 2px;
+	vertical-align: middle;
+}
+
+.spread i {
+	width: 8px;
+	height: 12px;
+	border-radius: 2px;
+	background: var(--border-muted);
+}
+
+.inner > td {
+	padding: 0;
+	background: var(--subtle);
+}
+
+.inner table th,
+.inner table td {
+	font-size: 12.5px;
+}
+
+.inner table td:first-child,
+.inner table th:first-child {
+	padding-left: 36px;
+}
+
+pre.block {
+	margin: 0;
+	padding: 12px 16px 14px 36px;
+	overflow-x: auto;
+	font: 12.5px/1.65 var(--mono);
+	white-space: pre;
+}
+
+.chart {
+	position: relative;
+}
+
+.chart svg {
+	display: block;
+	width: 100%;
+	height: 190px;
+}
+
+.chart .axis {
+	fill: var(--faint);
+	font: 11px var(--sans);
+}
+
+.chart .grid {
+	stroke: var(--border-muted);
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+.chart .column {
+	fill: var(--bar);
+	shape-rendering: crispEdges;
+}
+
+.chart .column.lit {
+	fill: var(--bar-lit);
+}
+
+.chart .cut {
+	fill: var(--warn);
+	shape-rendering: crispEdges;
+}
+
+.chart .error {
+	fill: var(--bad);
+}
+
+.tip {
+	position: absolute;
+	top: 10px;
+	min-width: 210px;
+	padding: 8px 12px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--bg);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+	font-size: 12.5px;
+	line-height: 1.6;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+.empty {
+	padding: 14px 16px;
+	color: var(--faint);
+}
+
+.filter {
+	width: 240px;
+	max-width: 100%;
+	padding: 4px 10px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--bg);
+	color: var(--text);
+	font: 13px var(--sans);
+}
+
+.filter:focus {
+	border-color: var(--accent);
+	outline: 2px solid var(--accent-soft);
+}
+
+.ran span {
+	display: inline-block;
+	margin-right: 16px;
+}
+
+footer {
+	margin-top: 40px;
+	color: var(--faint);
+	font-size: 12.5px;
+	line-height: 1.7;
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script id="data" type="application/json">"__TRACER_DATA__"</script>
+<script>
+(function () {
+	"use strict";
+
+	var data = JSON.parse(document.getElementById("data").textContent);
+	var app = document.getElementById("app");
+	var MICRO = "µs";
+
+	if (typeof data !== "object" || data === null) {
+		app.innerHTML = '<p class="empty">This file is the report template. The Tracer component fills it in.</p>';
+		return;
+	}
+
+	var BUCKETS = ["up to 10 " + MICRO, "up to 100 " + MICRO, "up to 1 ms", "up to 10 ms", "up to 100 ms", "over 100 ms"];
+	var NAME = 0;
+	var CALLS = 1;
+	var TOTAL = 2;
+	var SELF = 3;
+	var WORST = 4;
+	var WORST_AT = 5;
+	var BUCKET = 6;
+
+	var state = {
+		script: 0,
+		filter: "",
+		sort: {
+			publics: { key: SELF, up: false },
+			functions: { key: SELF, up: false },
+			natives: { key: SELF, up: false }
+		},
+		open: {}
+	};
+
+	data.scripts.forEach(function (script, index) {
+		if (script.main) {
+			state.script = index;
+		}
+	});
+
+	var profiled = data.settings.profile || data.scripts.some(function (script) {
+		return script.publics.length > 0;
+	});
+
+	function escape(text) {
+		return String(text).replace(/[&<>"]/g, function (character) {
+			return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[character];
+		});
+	}
+
+	function time(microseconds) {
+		if (microseconds < 1000) {
+			return microseconds.toFixed(microseconds < 10 ? 2 : 1) + " " + MICRO;
+		}
+		if (microseconds < 1000000) {
+			return (microseconds / 1000).toFixed(microseconds < 10000 ? 2 : 1) + " ms";
+		}
+		return (microseconds / 1000000).toFixed(2) + " s";
+	}
+
+	function count(value) {
+		return Math.round(value).toLocaleString("en-US");
+	}
+
+	function clock(seconds) {
+		if (seconds < 0) {
+			return "start up";
+		}
+		seconds = Math.floor(seconds);
+		var hours = Math.floor(seconds / 3600);
+		var minutes = Math.floor(seconds / 60) % 60;
+		var rest = seconds % 60;
+		var text = (minutes < 10 && hours ? "0" : "") + minutes + ":" + (rest < 10 ? "0" : "") + rest;
+		return hours ? hours + ":" + text : text;
+	}
+
+	function span(seconds) {
+		if (seconds < 60) {
+			return seconds.toFixed(1) + " s";
+		}
+		var minutes = Math.floor(seconds / 60);
+		if (minutes < 60) {
+			return minutes + " min " + Math.floor(seconds % 60) + " s";
+		}
+		return Math.floor(minutes / 60) + " h " + (minutes % 60) + " min";
+	}
+
+	function bytes(value) {
+		if (value < 1024) {
+			return value + " B";
+		}
+		if (value < 1048576) {
+			return (value / 1024).toFixed(1) + " KB";
+		}
+		return (value / 1048576).toFixed(1) + " MB";
+	}
+
+	function percent(part, whole) {
+		if (!whole) {
+			return "0%";
+		}
+		var value = part * 100 / whole;
+		if (value > 0 && value < 0.01) {
+			return "under 0.01%";
+		}
+		return (value < 10 ? value.toFixed(2) : value.toFixed(1)) + "%";
+	}
+
+	function plural(value, one, many) {
+		return count(value) + " " + (value === 1 ? one : many);
+	}
+
+	function counter(value, bad) {
+		return '<span class="counter' + (bad && value ? " bad" : "") + '">' + count(value) + "</span>";
+	}
+
+	function box(id, title, side, body, foot) {
+		return '<section class="box" id="' + id + '"><div class="box-head"><h2>' + title + "</h2>" + (side || "") + "</div>" + body +
+			(foot ? '<div class="box-foot">' + foot + "</div>" : "") + "</section>";
+	}
+
+	function spread(row) {
+		var cells = "";
+		var title = [];
+		var most = 0;
+		for (var index = 0; index !== 6; ++index) {
+			most = Math.max(most, row[BUCKET + index]);
+		}
+		for (index = 0; index !== 6; ++index) {
+			var calls = row[BUCKET + index];
+			var style = "";
+			if (calls) {
+				var strength = 0.3 + 0.7 * Math.log(1 + calls) / Math.log(1 + most);
+				style = "background:var(" + (index >= 3 ? "--warn" : "--bar") + ");opacity:" + strength.toFixed(2);
+			}
+			cells += '<i style="' + style + '"></i>';
+			title.push(BUCKETS[index] + ": " + count(calls));
+		}
+		return '<span class="spread" title="' + escape(title.join("\n")) + '">' + cells + "</span>";
+	}
+
+	function shareCell(value, whole) {
+		var width = whole ? Math.min(100, value * 100 / whole) : 0;
+		return '<div class="share"><span>' + percent(value, whole) + '</span><span class="bar"><i style="width:' + width.toFixed(1) + '%"></i></span></div>';
+	}
+
+	function worstCell(row) {
+		var slow = row[WORST] >= 10000 ? ' class="warn"' : "";
+		return "<span" + slow + ">" + time(row[WORST]) + '</span> <span class="at">at ' + clock(row[WORST_AT]) + "</span>";
+	}
+
+	function sorted(rows, sort) {
+		var copy = rows.slice();
+		copy.sort(function (a, b) {
+			var left = sort.key === -1 ? a[TOTAL] / a[CALLS] : a[sort.key];
+			var right = sort.key === -1 ? b[TOTAL] / b[CALLS] : b[sort.key];
+			if (typeof left === "string") {
+				return sort.up ? left.localeCompare(right) : right.localeCompare(left);
+			}
+			return sort.up ? left - right : right - left;
+		});
+		return copy;
+	}
+
+	function matches(name) {
+		return !state.filter || name.toLowerCase().indexOf(state.filter) !== -1;
+	}
+
+	var COLUMNS = [
+		{ title: "", key: NAME },
+		{ title: "Calls", key: CALLS },
+		{ title: "Own time", key: SELF },
+		{ title: "Share", key: null },
+		{ title: "Total", key: TOTAL },
+		{ title: "Average", key: -1 },
+		{ title: "Worst", key: WORST },
+		{ title: "Spread", key: null }
+	];
+
+	function header(kind, first) {
+		var sort = state.sort[kind];
+		return "<tr>" + COLUMNS.map(function (column, index) {
+			var title = index === 0 ? first : column.title;
+			if (column.key === null) {
+				var hint = column.title === "Spread" ? ' title="How many calls took each range of time"' : "";
+				return "<th" + hint + ">" + title + "</th>";
+			}
+			var classes = "sortable" + (sort.key === column.key ? (sort.up ? " sorted up" : " sorted") : "");
+			return '<th data-kind="' + kind + '" data-key="' + column.key + '" class="' + classes + '">' + title + "</th>";
+		}).join("") + "</tr>";
+	}
+
+	function rowCells(row, whole) {
+		return '<td class="name" title="' + escape(row[NAME]) + '">' + escape(row[NAME]) + "</td>" +
+			"<td>" + count(row[CALLS]) + "</td>" +
+			"<td>" + time(row[SELF]) + "</td>" +
+			"<td>" + shareCell(row[SELF], whole) + "</td>" +
+			"<td>" + time(row[TOTAL]) + "</td>" +
+			"<td>" + time(row[TOTAL] / row[CALLS]) + "</td>" +
+			"<td>" + worstCell(row) + "</td>" +
+			"<td>" + spread(row) + "</td>";
+	}
+
+	function pairTable(rows, first, column) {
+		rows = rows.slice().sort(function (a, b) {
+			return b[3] - a[3];
+		});
+		var body = rows.map(function (pair) {
+			return '<tr><td class="name">' + escape(pair[column]) + "</td><td>" + count(pair[2]) + "</td><td>" + time(pair[3]) + "</td><td>" + time(pair[3] / pair[2]) + "</td><td>" + time(pair[5]) + "</td></tr>";
+		}).join("");
+		return "<table><thead><tr><th>" + first + "</th><th>Calls</th><th>Total</th><th>Average</th><th>Worst</th></tr></thead><tbody>" + body + "</tbody></table>";
+	}
+
+	function scriptErrors(script) {
+		return data.errors.filter(function (error) {
+			return error[0] === script.name;
+		});
+	}
+
+	function scriptLongCalls(script) {
+		return data.longCalls.filter(function (call) {
+			return call[0] === script.name;
+		});
+	}
+
+	function summary(script) {
+		var seconds = data.seconds;
+		var worstSecond = 0;
+		var worstSecondAt = 0;
+		var players = 0;
+		var playerSum = 0;
+		var runningPublics = 0;
+		var runningNatives = 0;
+		seconds.forEach(function (second, index) {
+			if (second[0] > worstSecond) {
+				worstSecond = second[0];
+				worstSecondAt = index;
+			}
+			players = Math.max(players, second[6]);
+			playerSum += second[6];
+			runningPublics += second[3];
+			runningNatives += second[4];
+		});
+		var callbacks = 0;
+		var natives = 0;
+		script.publics.forEach(function (row) {
+			callbacks += row[CALLS];
+		});
+		script.natives.forEach(function (row) {
+			natives += row[CALLS];
+		});
+		var places = scriptErrors(script);
+		var errors = places.reduce(function (sum, error) {
+			return sum + error[4];
+		}, 0);
+		var longCalls = scriptLongCalls(script).length;
+		var running = Math.max(0, data.pawn - data.startup);
+		var perSecond = data.duration ? running / data.duration : 0;
+		var rows = [];
+		rows.push(["Run time errors", count(errors), errors ? "in " + plural(places.length, "place", "places") : "none", errors ? "bad" : ""]);
+		rows.push(["Long calls", count(longCalls), longCalls ? "over " + time(data.settings.longCallTime) : "none over " + time(data.settings.longCallTime), longCalls ? "warn" : ""]);
+		if (profiled) {
+			rows.push(["Start up", time(data.startup), "of Pawn before the first server tick, " + time(data.startupWall) + " in all"]);
+			rows.push(["Pawn share", percent(running, data.duration * 1000000), "of the server's time after the start up"]);
+			rows.push(["Pawn per second", time(perSecond), "on average, the busiest second had " + time(worstSecond) + " at " + clock(worstSecondAt)]);
+			rows.push(["Worst tick", time(data.worstTick), "at " + clock(data.worstTickAt) + ", of " + count(data.ticks) + " ticks"]);
+			rows.push(["Publics", count(callbacks), count(data.duration ? runningPublics / data.duration : 0) + " calls a second after the start up"]);
+			rows.push(["Natives", data.settings.natives ? count(natives) : "not timed", data.settings.natives ? count(data.duration ? runningNatives / data.duration : 0) + " calls a second after the start up" : "profile_natives is off"]);
+			rows.push(["Players", count(players), players ? "at most, " + (playerSum / Math.max(1, seconds.length)).toFixed(1) + " on average" : "none connected"]);
+			if (script.memory.length === 3) {
+				var used = script.memory[0] + script.memory[1];
+				var level = used * 100 / script.memory[2];
+				rows.push(["Stack and heap", percent(used, script.memory[2]), bytes(script.memory[0]) + " of stack and " + bytes(script.memory[1]) + " of heap at most, of " + bytes(script.memory[2]) + ", seen at native calls", level >= 90 ? "bad" : (level >= 75 ? "warn" : "")]);
+			}
+		}
+		var body = '<table class="kv"><tbody>' + rows.map(function (row) {
+			return "<tr><td>" + row[0] + '</td><td><span class="value ' + (row[3] || "") + '">' + row[1] + '</span><span class="detail">' + row[2] + "</span></td></tr>";
+		}).join("") + "</tbody></table>";
+		return box("summary", "Summary", "", body);
+	}
+
+	function blockRows(rows, key, columns, cells) {
+		return rows.map(function (row, index) {
+			var id = key + index;
+			var open = state.open[id];
+			var html = '<tr class="row expandable' + (open ? " open" : "") + '" data-open="' + id + '">' + cells(row) + "</tr>";
+			if (open) {
+				html += '<tr class="inner"><td colspan="' + columns + '"><pre class="block">' + escape(row[row.length - 1].join("\n")) + "</pre></td></tr>";
+			}
+			return html;
+		}).join("");
+	}
+
+	function errorsSection(script) {
+		var rows = scriptErrors(script).sort(function (a, b) {
+			return b[4] - a[4];
+		});
+		if (!rows.length) {
+			return "";
+		}
+		var body = blockRows(rows, "error", 6, function (error) {
+			return '<td class="left"><span class="label">' + error[2] + "</span> " + escape(error[3]) + "</td>" +
+				'<td class="left wrap name">' + (error[7] ? escape(error[7]) : '<span class="at">no debug information</span>') + "</td>" +
+				'<td class="left name">' + escape(error[1]) + "</td>" +
+				"<td>" + count(error[4]) + "</td>" +
+				"<td>" + clock(error[5]) + "</td>" +
+				"<td>" + clock(error[6]) + "</td>";
+		});
+		return box("errors", "Run time errors " + counter(rows.length, true), "",
+			'<div class="scroll"><table><thead><tr><th>Error</th><th class="left">Where</th><th class="left">Public</th><th>Count</th><th>First</th><th>Last</th></tr></thead><tbody>' + body + "</tbody></table></div>",
+			"Click an error to see the report printed the first time it happened, with its backtrace. Errors inside <code>CallLocalFunction</code> are listed too.");
+	}
+
+	function longCallsSection(script) {
+		var rows = scriptLongCalls(script);
+		if (!rows.length) {
+			return "";
+		}
+		var body = blockRows(rows, "long", 3, function (call) {
+			return '<td class="name">' + escape(call[1]) + '</td><td class="warn">' + time(call[2]) + "</td><td>" + clock(call[3]) + "</td>";
+		});
+		return box("long", "Long calls " + counter(rows.length), "",
+			'<div class="scroll"><table><thead><tr><th>Public</th><th>Took</th><th>At</th></tr></thead><tbody>' + body + "</tbody></table></div>",
+			"The calls that took longer than " + time(data.settings.longCallTime) + ", the longest first. Click one to see where its time went.");
+	}
+
+	function axis(milliseconds) {
+		if (milliseconds >= 1000) {
+			return (milliseconds / 1000) + " s";
+		}
+		return (milliseconds % 1 ? milliseconds.toFixed(2).replace(/0$/, "") : milliseconds) + " ms";
+	}
+
+	function chartSection() {
+		return box("timeline", "Pawn time per second", "", '<div class="chart" id="chart"></div>',
+			"After the start up. Each column is the busiest second it covers. A column cut at the top is far above the rest, and a red mark under a column means run time errors. Point at a column for details.");
+	}
+
+	function drawChart() {
+		var holder = document.getElementById("chart");
+		if (!holder) {
+			return;
+		}
+		var seconds = data.seconds;
+		if (!seconds.length) {
+			holder.innerHTML = '<div class="empty">Less than a second was profiled.</div>';
+			return;
+		}
+		var width = holder.clientWidth;
+		var height = 190;
+		var left = 56;
+		var right = 16;
+		var top = 16;
+		var bottom = 28;
+		var plot = width - left - right;
+		var columns = Math.max(1, Math.min(seconds.length, Math.floor(plot / 4)));
+		var group = Math.ceil(seconds.length / columns);
+		columns = Math.ceil(seconds.length / group);
+		var slot = plot / columns;
+		var thickness = Math.max(1, slot >= 4 ? slot - 1 : slot);
+		var values = [];
+		var errors = [];
+		for (var column = 0; column !== columns; ++column) {
+			var highest = 0;
+			var failed = 0;
+			for (var index = column * group; index < Math.min(seconds.length, (column + 1) * group); ++index) {
+				highest = Math.max(highest, seconds[index][0]);
+				failed += seconds[index][5];
+			}
+			values.push(highest / 1000);
+			errors.push(failed);
+		}
+		var most = Math.max.apply(null, values);
+		var ordered = values.slice().sort(function (a, b) {
+			return a - b;
+		});
+		var usual = ordered[Math.floor((ordered.length - 1) * 0.95)];
+		var scale = most;
+		if (ordered.length >= 10 && most > 8 * Math.max(usual, 0.05)) {
+			scale = Math.max(usual * 2, 0.25);
+		}
+		var steps = [0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000];
+		var step = steps.find(function (candidate) {
+			return candidate * 4 >= scale;
+		}) || Math.ceil(scale / 4);
+		var ceiling = step * 4;
+		function y(value) {
+			return top + (height - top - bottom) * (1 - value / ceiling);
+		}
+		var base = y(0);
+		var svg = '<svg viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none">';
+		for (var line = 0; line <= 4; ++line) {
+			var value = step * line;
+			svg += '<line class="grid" x1="' + left + '" x2="' + (width - right) + '" y1="' + y(value).toFixed(1) + '" y2="' + y(value).toFixed(1) + '"/>';
+			svg += '<text class="axis" x="' + (left - 8) + '" y="' + (y(value) + 4).toFixed(1) + '" text-anchor="end">' + axis(value) + "</text>";
+		}
+		values.forEach(function (value, column) {
+			var x = left + column * slot;
+			var cut = value > ceiling;
+			var peak = Math.min(y(Math.min(value, ceiling)), base - (value > 0 ? 1 : 0));
+			svg += '<rect class="column" data-column="' + column + '" x="' + x.toFixed(2) + '" y="' + peak.toFixed(1) + '" width="' + thickness.toFixed(2) + '" height="' + Math.max(0, base - peak).toFixed(1) + '"/>';
+			if (cut) {
+				svg += '<rect class="cut" x="' + x.toFixed(2) + '" y="' + (peak - 1).toFixed(1) + '" width="' + thickness.toFixed(2) + '" height="3"/>';
+			}
+			if (errors[column]) {
+				svg += '<rect class="error" x="' + (x + thickness / 2 - 1.5).toFixed(1) + '" y="' + (base + 3) + '" width="3" height="5"/>';
+			}
+		});
+		var labels = Math.min(6, columns);
+		for (var label = 0; label !== labels; ++label) {
+			var at = labels === 1 ? 0 : Math.round(label * (columns - 1) / (labels - 1));
+			var anchor = label === 0 ? "start" : (label === labels - 1 ? "end" : "middle");
+			var position = left + at * slot + (anchor === "start" ? 0 : (anchor === "end" ? thickness : thickness / 2));
+			svg += '<text class="axis" x="' + position.toFixed(1) + '" y="' + (height - 9) + '" text-anchor="' + anchor + '">' + clock(at * group) + "</text>";
+		}
+		svg += "</svg>";
+		holder.innerHTML = svg + '<div class="tip" id="tip" hidden></div>';
+
+		var tip = document.getElementById("tip");
+		var lit = null;
+		holder.onmousemove = function (event) {
+			var bounds = holder.getBoundingClientRect();
+			var position = (event.clientX - bounds.left) * width / bounds.width;
+			var column = Math.max(0, Math.min(columns - 1, Math.floor((position - left) / slot)));
+			var first = column * group;
+			var last = Math.min(seconds.length, first + group);
+			var peak = first;
+			var tick = 0;
+			var ticks = 0;
+			var publics = 0;
+			var natives = 0;
+			var failed = 0;
+			var players = 0;
+			for (var index = first; index < last; ++index) {
+				var second = seconds[index];
+				if (second[0] > seconds[peak][0]) {
+					peak = index;
+				}
+				tick = Math.max(tick, second[1]);
+				ticks += second[2];
+				publics += second[3];
+				natives += second[4];
+				failed += second[5];
+				players = Math.max(players, second[6]);
+			}
+			var size = last - first;
+			if (lit) {
+				lit.classList.remove("lit");
+			}
+			lit = holder.querySelector('rect.column[data-column="' + column + '"]');
+			if (lit) {
+				lit.classList.add("lit");
+			}
+			tip.hidden = false;
+			tip.innerHTML = "<strong>" + clock(peak) + "</strong>" + (size > 1 ? ' <span class="at">busiest second of ' + clock(first) + " to " + clock(last - 1) + "</span>" : "") +
+				"<br>" + time(seconds[peak][0]) + " of Pawn in that second" +
+				"<br>worst tick " + time(tick) +
+				"<br>" + count(ticks / size) + " ticks, " + count(publics / size) + " publics and " + count(natives / size) + " natives a second" +
+				"<br>" + plural(players, "player", "players") +
+				(failed ? '<br><span class="bad">' + plural(failed, "run time error", "run time errors") + "</span>" : "");
+			var place = ((left + column * slot + thickness) / width) * bounds.width;
+			tip.style.left = Math.max(4, Math.min(bounds.width - tip.offsetWidth - 4, place + 10)) + "px";
+		};
+		holder.onmouseleave = function () {
+			tip.hidden = true;
+			if (lit) {
+				lit.classList.remove("lit");
+				lit = null;
+			}
+		};
+	}
+
+	function slowTicksSection() {
+		var ticks = data.slowTicks || [];
+		if (!ticks.length) {
+			return "";
+		}
+		var many = data.scripts.length > 1;
+		var body = ticks.map(function (tick) {
+			var ran = tick[3].map(function (group) {
+				return '<span class="mono">' + escape(many ? group[0] + ": " + group[1] : group[1]) + "</span>" + (group[2] > 1 ? " ×" + count(group[2]) : "") + ' <span class="at">' + time(group[3]) + "</span>";
+			}).map(function (text) {
+				return "<span>" + text + "</span>";
+			}).join("");
+			var rest = tick[2] - tick[3].reduce(function (sum, group) {
+				return sum + group[2];
+			}, 0);
+			if (rest > 0) {
+				ran += '<span class="at">and ' + plural(rest, "more call", "more calls") + "</span>";
+			}
+			return '<tr class="row"><td>' + clock(tick[0]) + '</td><td class="' + (tick[1] >= 10000 ? "warn" : "") + '">' + time(tick[1]) + "</td><td>" + count(tick[2]) + '</td><td class="left ran">' + ran + "</td></tr>";
+		}).join("");
+		return box("ticks", "Slowest ticks", "",
+			'<div class="scroll"><table><thead><tr><th>At</th><th>Pawn</th><th>Publics</th><th class="left">What ran</th></tr></thead><tbody>' + body + "</tbody></table></div>",
+			"The server ticks with the most Pawn time, and the publics the server called in each.");
+	}
+
+	function publicsSection(script) {
+		var rows = sorted(script.publics.filter(function (row) {
+			return matches(row[NAME]);
+		}), state.sort.publics);
+		var pairs = {};
+		script.pairs.forEach(function (pair) {
+			(pairs[pair[0]] = pairs[pair[0]] || []).push(pair);
+		});
+		var body = rows.map(function (row) {
+			var name = row[NAME];
+			var inner = pairs[name] || [];
+			var open = state.open["public:" + name];
+			var html = '<tr class="row' + (inner.length ? " expandable" : "") + (open ? " open" : "") + '" data-open="public:' + escape(name) + '">' + rowCells(row, data.pawn) + "</tr>";
+			if (open) {
+				html += '<tr class="inner"><td colspan="8">' + pairTable(inner, "Native called here", 1) + "</td></tr>";
+			}
+			return html;
+		}).join("");
+		return box("publics", "Publics " + counter(script.publics.length), '<input class="filter" id="filter" placeholder="Filter publics, functions and natives" value="' + escape(state.filter) + '">',
+			rows.length
+				? '<div class="scroll"><table><thead>' + header("publics", "Public") + "</thead><tbody>" + body + "</tbody></table></div>"
+				: '<div class="empty">No public matches the filter.</div>',
+			"Own time leaves out the natives a public calls and the publics it starts with <code>CallLocalFunction</code>" + (script.debug && data.settings.functions ? ", and the functions it calls" : "") + ". Click a row to see its natives.");
+	}
+
+	function functionsSection(script) {
+		if (!script.debug || !script.functions.length) {
+			return "";
+		}
+		var rows = sorted(script.functions.filter(function (row) {
+			return matches(row[NAME]);
+		}), state.sort.functions);
+		var body = rows.map(function (row) {
+			return '<tr class="row">' + rowCells(row, data.pawn) + "</tr>";
+		}).join("");
+		return box("functions", "Functions " + counter(script.functions.length), "",
+			rows.length
+				? '<div class="scroll"><table><thead>' + header("functions", "Function") + "</thead><tbody>" + body + "</tbody></table></div>"
+				: '<div class="empty">No function matches the filter.</div>',
+			"Timed from the debug information of the script, so only a <code>-d2</code> or <code>-d3</code> build has this list. Own time leaves out the functions and natives a function calls.");
+	}
+
+	function nativesSection(script) {
+		if (!data.settings.natives) {
+			return box("natives", "Natives", "", '<div class="empty">Native timing is off, <code>profile_natives</code> in config.json turns it on.</div>');
+		}
+		var rows = sorted(script.natives.filter(function (row) {
+			return matches(row[NAME]);
+		}), state.sort.natives);
+		var callers = {};
+		script.pairs.forEach(function (pair) {
+			(callers[pair[1]] = callers[pair[1]] || []).push(pair);
+		});
+		var body = rows.map(function (row) {
+			var name = row[NAME];
+			var inner = callers[name] || [];
+			var open = state.open["native:" + name];
+			var html = '<tr class="row' + (inner.length ? " expandable" : "") + (open ? " open" : "") + '" data-open="native:' + escape(name) + '">' + rowCells(row, data.pawn) + "</tr>";
+			if (open) {
+				html += '<tr class="inner"><td colspan="8">' + pairTable(inner, "Called from", 0) + "</td></tr>";
+			}
+			return html;
+		}).join("");
+		return box("natives", "Natives " + counter(script.natives.length), "",
+			rows.length
+				? '<div class="scroll"><table><thead>' + header("natives", "Native") + "</thead><tbody>" + body + "</tbody></table></div>"
+				: '<div class="empty">No native matches the filter.</div>',
+			"Own time leaves out the publics a native starts, such as the target of <code>CallLocalFunction</code>. Click a row to see the publics that call it.");
+	}
+
+	function navigation(script) {
+		var links = [["summary", "Summary", null, false]];
+		var errors = scriptErrors(script).length;
+		var longCalls = scriptLongCalls(script).length;
+		if (errors) {
+			links.push(["errors", "Errors", errors, true]);
+		}
+		if (longCalls) {
+			links.push(["long", "Long calls", longCalls, false]);
+		}
+		if (profiled) {
+			links.push(["timeline", "Pawn time", null, false]);
+			if ((data.slowTicks || []).length) {
+				links.push(["ticks", "Slowest ticks", null, false]);
+			}
+			links.push(["publics", "Publics", script.publics.length, false]);
+			if (script.debug && script.functions.length) {
+				links.push(["functions", "Functions", script.functions.length, false]);
+			}
+			links.push(["natives", "Natives", script.natives.length, false]);
+		}
+		return '<nav class="sections">' + links.map(function (link) {
+			return '<a href="#' + link[0] + '" data-section="' + link[0] + '">' + link[1] + (link[2] !== null ? " " + counter(link[2], link[3]) : "") + "</a>";
+		}).join("") + "</nav>";
+	}
+
+	function render() {
+		var script = data.scripts[state.script];
+		var scripts = data.scripts.length > 1
+			? '<div class="scripts">' + data.scripts.map(function (item, index) {
+				return '<button data-script="' + index + '" class="' + (index === state.script ? "on" : "") + '">' + escape(item.name) + (item.main ? " (gamemode)" : "") + "</button>";
+			}).join("") + "</div>"
+			: "";
+		var overhead = data.pawn ? data.overhead * 100 / data.pawn : 0;
+		var body = "";
+		if (!script) {
+			body = '<div class="notice">No script was watched.</div>';
+		} else {
+			body += navigation(script);
+			if (!profiled) {
+				body += '<div class="notice">Profiling was off, so this report holds the errors and long calls only. Set <code>tracer.profile</code> to <code>true</code> in config.json to time publics, natives and functions. The change applies without a restart.</div>';
+			}
+			body += summary(script) + errorsSection(script) + longCallsSection(script);
+			if (profiled) {
+				body += chartSection() + slowTicksSection() + publicsSection(script) + functionsSection(script) + nativesSection(script);
+			}
+		}
+		app.innerHTML =
+			'<header class="head"><div class="title"><span class="product">Tracer</span><span class="slash">/</span><strong>' + escape(script ? script.name : "no script") + "</strong></div>" +
+			'<div class="meta">' + span(data.duration) + " from " + escape(data.started) + " to " + escape(data.generated) + ", written on " + escape(data.reason === "command" ? "request" : data.reason) + "</div>" +
+			scripts + "</header>" + body +
+			"<footer>Tracer " + escape(data.version) + ". Times are wall clock time on the server thread." +
+			(profiled ? " Measuring added about " + time(data.overhead) + ", " + overhead.toFixed(1) + "% of the Pawn time shown." : "") + "<br>" +
+			"Settings <code>profile " + data.settings.profile + "</code> <code>profile_natives " + data.settings.natives + "</code> <code>profile_callers " + data.settings.callers + "</code> <code>profile_functions " + data.settings.functions + "</code> <code>long_call_time " + data.settings.longCallTime + "</code>. " +
+			"Console <code>tracer report</code> <code>tracer reset</code> <code>tracer reload</code> <code>tracer errors</code>.</footer>";
+		drawChart();
+		bind();
+	}
+
+	function bind() {
+		var filter = document.getElementById("filter");
+		if (filter) {
+			filter.oninput = function () {
+				var at = filter.selectionStart;
+				state.filter = filter.value.trim().toLowerCase();
+				var scroll = window.scrollY;
+				render();
+				window.scrollTo(0, scroll);
+				var again = document.getElementById("filter");
+				again.focus();
+				again.setSelectionRange(at, at);
+			};
+		}
+		Array.prototype.forEach.call(app.querySelectorAll("th[data-kind]"), function (cell) {
+			cell.onclick = function () {
+				var sort = state.sort[cell.getAttribute("data-kind")];
+				var key = Number(cell.getAttribute("data-key"));
+				sort.up = sort.key === key ? !sort.up : key === NAME;
+				sort.key = key;
+				var scroll = window.scrollY;
+				render();
+				window.scrollTo(0, scroll);
+			};
+		});
+		Array.prototype.forEach.call(app.querySelectorAll("tr.expandable"), function (row) {
+			row.onclick = function () {
+				var key = row.getAttribute("data-open");
+				state.open[key] = !state.open[key];
+				var scroll = window.scrollY;
+				render();
+				window.scrollTo(0, scroll);
+			};
+		});
+		Array.prototype.forEach.call(app.querySelectorAll(".scripts button"), function (button) {
+			button.onclick = function () {
+				state.script = Number(button.getAttribute("data-script"));
+				state.open = {};
+				render();
+			};
+		});
+		highlight();
+	}
+
+	function highlight() {
+		var links = app.querySelectorAll(".sections a");
+		var current = null;
+		Array.prototype.forEach.call(links, function (link) {
+			var section = document.getElementById(link.getAttribute("data-section"));
+			if (section && section.getBoundingClientRect().top <= 80) {
+				current = link;
+			}
+		});
+		Array.prototype.forEach.call(links, function (link) {
+			link.classList.toggle("on", link === (current || links[0]));
+		});
+	}
+
+	var resizing = 0;
+	window.addEventListener("resize", function () {
+		clearTimeout(resizing);
+		resizing = setTimeout(drawChart, 100);
+	});
+	window.addEventListener("scroll", highlight, { passive: true });
+
+	render();
+})();
+</script>
+</body>
+</html>
